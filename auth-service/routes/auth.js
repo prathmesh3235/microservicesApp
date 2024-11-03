@@ -13,9 +13,15 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
 });
 
 // Logout route
-router.get('/logout', (req, res) => {
-    req.logout();
-    res.json({ message: 'Logged out successfully' });
+router.get('/logout', (req, res, next) => {
+    req.logout(function(err) {
+        if (err) {
+            return next(err);
+        }
+        res.json({ message: 'Logged out successfully' });
+        // res.redirect(`${process.env.FRONTEND_URL}/login`);
+
+    });
 });
 
 module.exports = router;
