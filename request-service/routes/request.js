@@ -7,18 +7,26 @@ require('dotenv').config();
 
 // Route to create a new request
 router.post('/create', async (req, res) => {
-    const { title, requesterEmail, approverEmail } = req.body;
+    const { title, description, type, urgency, requesterEmail, approverEmail } = req.body;
+
+    // Check if all fields are provided
+    if (!title || !description || !type || !urgency || !requesterEmail || !approverEmail) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
     
     try {
+        // Create and save request
+        const newRequest = new Request({ title, description, type, urgency, requesterEmail, approverEmail });
+        await newRequest.save();
 
         // Notify requester and approver
-        const response = await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/send-request-notification`, {
+        await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/send-request-notification`, {
             requesterEmail,
             approverEmail,
             requestTitle: title
         });
 
-        res.status(201).json({ message: 'Request created and notifications sent', request: response.data });
+        res.status(201).json({ message: 'Request created and notifications sent', request: newRequest });
     } catch (error) {
         console.error('Error creating request:', error);
         res.status(500).json({ message: 'Failed to create request' });
@@ -29,19 +37,16 @@ router.post('/create', async (req, res) => {
 router.put('/approve/:id', async (req, res) => {
     const { id } = req.params;
 
-    // Validate that `id` is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: 'Invalid request ID' });
     }
     
     try {
-        // Update request status to "Approved"
         const updatedRequest = await Request.findByIdAndUpdate(id, { status: 'Approved' }, { new: true });
         if (!updatedRequest) {
             return res.status(404).json({ message: 'Request not found' });
         }
 
-        // Notify requester and approver of approval
         await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/send-approval-notification`, {
             requesterEmail: updatedRequest.requesterEmail,
             approverEmail: updatedRequest.approverEmail,

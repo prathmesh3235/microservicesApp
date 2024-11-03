@@ -31,7 +31,7 @@ const sendEmail = (to, subject, text) => {
 router.post('/send-login-notification', async (req, res) => {
     const { email, name } = req.body;
     const subject = 'Successful Login Notification';
-    const text = `Hello ${name},\n\nYou have successfully logged into the application.`;
+    const text = `Hello ,\n\nYou have successfully logged into the application.`;
 
     try {
         await sendEmail(email, subject, text);

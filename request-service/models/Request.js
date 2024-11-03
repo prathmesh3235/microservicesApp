@@ -3,11 +3,12 @@ const mongoose = require('mongoose');
 const requestSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
-    type: { type: String, enum: ['Leave', 'Equipment', 'Overtime'], required: true },
-    urgency: { type: String, enum: ['Low', 'Medium', 'High'], required: true },
+    type: { type: String, required: true },
+    urgency: { type: String, required: true },
     requesterEmail: { type: String, required: true },
     approverEmail: { type: String, required: true },
-    status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' }
-}, { timestamps: true });
+    status: { type: String, default: 'Pending' },
+    createdAt: { type: Date, default: Date.now }
+});
 
 module.exports = mongoose.model('Request', requestSchema);

@@ -6,13 +6,15 @@ import RequestStatus from './components/RequestStatus';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/status" element={<RequestStatus />} />
-      </Routes>
-    </Router>
+    <div className="min-h-screen bg-gray-50">
+      <Router>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/status" element={<RequestStatus />} />
+        </Routes>
+      </Router>
+    </div>
   );
 }
 
