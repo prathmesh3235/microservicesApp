@@ -1,7 +1,7 @@
 const express = require('express');
 const passport = require('passport');
 const router = express.Router();
-const axios = require('axios')
+const axios = require('axios');
 
 // Initiating Google login
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -17,12 +17,12 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
             message: 'You have successfully logged in.'
         });
 
-        // Redirect to frontend with token
-        res.redirect(`${process.env.FRONTEND_URL}/dashboard?token=${token}`);
+        // Redirect to frontend with token and email
+        res.redirect(`${process.env.FRONTEND_URL}/dashboard?email=${email}&token=${token}`);
     } catch (error) {
         console.error('Error sending login notification:', error);
         // Redirect to frontend regardless, but log the error
-        res.redirect(`${process.env.FRONTEND_URL}/dashboard?token=${token}`);
+        res.redirect(`${process.env.FRONTEND_URL}/dashboard?email=${email}&token=${token}`);
     }
 });
 
@@ -34,8 +34,6 @@ router.get('/logout', (req, res, next) => {
             return next(err);
         }
         res.json({ message: 'Logged out successfully' });
-        // res.redirect(`${process.env.FRONTEND_URL}/login`);
-
     });
 });
 

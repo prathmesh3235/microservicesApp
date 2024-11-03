@@ -3,21 +3,9 @@ import axios from 'axios';
 import { Bell, LogOut, Plus, Calendar, Box, Clock3 } from 'lucide-react';
 import { Dialog } from '@headlessui/react';
 
-const RequestTypeIcon = ({ type }) => {
-  switch (type) {
-    case 'Leave':
-      return <Calendar className="w-5 h-5" />;
-    case 'Equipment':
-      return <Box className="w-5 h-5" />;
-    case 'Overtime':
-      return <Clock3 className="w-5 h-5" />;
-    default:
-      return null;
-  }
-};
-
 const Dashboard = () => {
     const [role] = useState('requester');
+    const [userEmail, setUserEmail] = useState('');
     const [requests, setRequests] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [newRequest, setNewRequest] = useState({
@@ -28,6 +16,22 @@ const Dashboard = () => {
         requesterEmail: '', // Initialize requesterEmail
         approverEmail: ''
     });
+
+    // Fetch user email and token from URL on initial load and store it
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        const email = params.get('email');
+
+        if (token) localStorage.setItem('token', token);
+        if (email) {
+            localStorage.setItem('userEmail', email);
+            setUserEmail(email);
+            setNewRequest(prev => ({ ...prev, requesterEmail: email }));
+        } else {
+            console.error('User email not found in URL parameters');
+        }
+    }, []);
 
     // Load pending requests for approvers
     useEffect(() => {
@@ -54,22 +58,9 @@ const Dashboard = () => {
         }
     };
 
-    const handleApproveRequest = async (id) => {
-        try {
-            const response = await axios.put(`${process.env.REACT_APP_REQUEST_SERVICE_URL}/approve/${id}`);
-            alert('Request approved successfully!');
-            setRequests(prevRequests =>
-                prevRequests.map(request =>
-                    request._id === id ? { ...request, status: 'Approved' } : request
-                )
-            );
-        } catch (error) {
-            console.error('Error approving request:', error.response?.data || error.message);
-        }
-    };
-
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('userEmail'); // Clear stored email on logout
         window.location.href = '/';
     };
 
@@ -161,16 +152,6 @@ const Dashboard = () => {
                                                     <option value="Medium">Medium</option>
                                                     <option value="High">High</option>
                                                 </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">Requester's Email</label>
-                                                <input
-                                                    type="email"
-                                                    name="requesterEmail"
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-                                                    onChange={handleInputChange}
-                                                    required
-                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Approver's Email</label>
