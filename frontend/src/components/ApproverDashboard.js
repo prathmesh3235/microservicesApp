@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, CheckCircle, XCircle, Clock, AlertCircle, Search } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertCircle, Search } from 'lucide-react';
 import axios from 'axios';
 
 // RequestCard component with action buttons
@@ -33,19 +33,49 @@ const RequestCard = ({ request, onStatusChange }) => {
     
     setIsUpdating(true);
     try {
-      const response = await axios.put(
-        `${process.env.REACT_APP_NOTIFICATION_SERVICE_URL}/request/update-status/${request._id}`,
-        { status: action }
-      );
-      onStatusChange(request._id, action);
+      console.log('Updating request:', request._id, 'with status:', action);
+      
+      // Add proper URL formatting and headers
+      const updateResponse = await axios({
+        method: 'PUT',
+        url: `${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/update-status/${request._id}`,
+        data: { status: action },
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (updateResponse.data.request) {
+        // Only send notification if update was successful
+        try {
+          await axios({
+            method: 'POST',
+            url: `${process.env.REACT_APP_NOTIFICATION_SERVICE_URL}/notification/send-status-update-notification`,
+            data: {
+              requesterEmail: request.requesterEmail,
+              approverEmail: request.approverEmail,
+              requestTitle: request.title,
+              status: action
+            },
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (notificationError) {
+          console.error('Notification error:', notificationError);
+          // Continue even if notification fails
+        }
+  
+        onStatusChange(request._id, action);
+      }
     } catch (error) {
-      console.error('Error updating request:', error);
-      alert('Failed to update request status. Please try again.');
+      console.error('Error updating request:', error.response?.data || error);
+      const errorMessage = error.response?.data?.message || 'Failed to update request status. Please try again.';
+      alert(errorMessage);
     } finally {
       setIsUpdating(false);
     }
   };
-
   const statusColorClass = getStatusColor(request.status);
 
   return (
@@ -113,20 +143,35 @@ const ApproverDashboard = () => {
     const fetchRequests = async () => {
       try {
         const userEmail = localStorage.getItem('userEmail');
-        const response = await axios.get(`${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/fetch`, {
-          params: { email: userEmail, role: 'approver' }
+        if (!userEmail) {
+          console.error('User email not found in localStorage');
+          return;
+        }
+  
+        console.log('Fetching requests for:', userEmail);
+        const response = await axios({
+          method: 'GET',
+          url: `${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/fetch`,
+          params: { 
+            email: userEmail, 
+            role: 'approver' 
+          },
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
+  
+        console.log('Fetched requests:', response.data);
         setRequests(response.data);
       } catch (error) {
-        console.error('Error fetching requests:', error);
+        console.error('Error fetching requests:', error.response?.data || error);
       } finally {
         setIsLoading(false);
       }
     };
-
+  
     fetchRequests();
   }, []);
-
   const handleStatusChange = (requestId, newStatus) => {
     setRequests(prevRequests =>
       prevRequests.map(request =>

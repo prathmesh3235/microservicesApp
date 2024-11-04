@@ -84,5 +84,59 @@ router.get('/fetch', async (req, res) => {
     }
 });
 
+// Route to update request status
+router.put('/update-status/:id', async (req, res) => {
+    console.log('Received update request:', req.params, req.body);
+    
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+        // Validate status
+        if (!['approved', 'rejected'].includes(status?.toLowerCase())) {
+            return res.status(400).json({
+                message: 'Invalid status value. Must be either "approved" or "rejected"'
+            });
+        }
+
+        // Validate ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                message: 'Invalid request ID format'
+            });
+        }
+
+        // Find the request first
+        const request = await Request.findById(id);
+        
+        if (!request) {
+            return res.status(404).json({
+                message: 'Request not found',
+                requestId: id
+            });
+        }
+
+        // Update the request
+        const updatedRequest = await Request.findByIdAndUpdate(
+            id,
+            { status: status.toLowerCase() },
+            { new: true }
+        );
+
+        console.log('Request updated successfully:', updatedRequest);
+
+        return res.status(200).json({
+            message: 'Request status updated successfully',
+            request: updatedRequest
+        });
+
+    } catch (error) {
+        console.error('Error updating request:', error);
+        return res.status(500).json({
+            message: 'Failed to update request status',
+            error: error.message
+        });
+    }
+});
 
 module.exports = router;
