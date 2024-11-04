@@ -107,7 +107,7 @@ router.put('/approve/:id', async (req, res) => {
 
 // Route to fetch requests for a user
 router.get('/fetch', async (req, res) => {
-    const { email, role } = req.query;
+    const { email, role, includeAll } = req.query;
 
     if (!email || !role) {
         return res.status(400).json({ message: 'Email and role are required' });
@@ -119,7 +119,13 @@ router.get('/fetch', async (req, res) => {
         if (role === 'requester') {
             requests = await Request.find({ requesterEmail: email });
         } else if (role === 'approver') {
-            requests = await Request.find({ approverEmail: email, status: 'Pending' });
+            if (includeAll === 'true') {
+                // If includeAll is true, fetch all requests for the approver
+                requests = await Request.find({ approverEmail: email });
+            } else {
+                // Otherwise, fetch only pending requests
+                requests = await Request.find({ approverEmail: email, status: 'Pending' });
+            }
         } else {
             return res.status(400).json({ message: 'Invalid role' });
         }
@@ -130,7 +136,6 @@ router.get('/fetch', async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch requests' });
     }
 });
-
 // Route to update request status
 router.put('/update-status/:id', async (req, res) => {
     console.log('Received update request:', req.params, req.body);

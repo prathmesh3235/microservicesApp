@@ -148,21 +148,25 @@ const ApproverDashboard = () => {
           return;
         }
   
-        console.log('Fetching requests for:', userEmail);
         const response = await axios({
           method: 'GET',
           url: `${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/fetch`,
           params: { 
             email: userEmail, 
-            role: 'approver' 
+            role: 'approver',
+            includeAll: true
           },
           headers: {
             'Content-Type': 'application/json'
           }
         });
   
-        console.log('Fetched requests:', response.data);
-        setRequests(response.data);
+        // Sort requests by createdAt date in descending order (newest first)
+        const sortedRequests = response.data.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        
+        setRequests(sortedRequests);
       } catch (error) {
         console.error('Error fetching requests:', error.response?.data || error);
       } finally {
@@ -172,11 +176,12 @@ const ApproverDashboard = () => {
   
     fetchRequests();
   }, []);
+
   const handleStatusChange = (requestId, newStatus) => {
     setRequests(prevRequests =>
       prevRequests.map(request =>
         request._id === requestId ? { ...request, status: newStatus } : request
-      )
+      ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     );
   };
 
@@ -238,7 +243,7 @@ const ApproverDashboard = () => {
               <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">No requests found</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {searchQuery ? 'Try adjusting your search terms' : 'You have no pending requests to review'}
+                {searchQuery ? 'Try adjusting your search terms' : 'No requests match the current filter'}
               </p>
             </div>
           )}
