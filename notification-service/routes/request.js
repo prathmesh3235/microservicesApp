@@ -37,6 +37,7 @@ router.put('/update-status/:id', async (req, res) => {
             });
         } catch (notificationError) {
             console.error('Error sending notification:', notificationError);
+            // Continue with the request update even if notification fails
         }
 
         res.status(200).json({ message: 'Request status updated', request: updatedRequest });

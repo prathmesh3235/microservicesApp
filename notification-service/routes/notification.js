@@ -69,19 +69,45 @@ router.post('/send-request-notification', async (req, res) => {
 
 
 // Route to send approval notification
-router.post('/send-approval-notification', async (req, res) => {
-    const { requesterEmail, approverEmail, requestTitle } = req.body;
-    const subject = 'Request Approval Notification';
-    const text = `The request titled "${requestTitle}" has been approved by the approver.`;
+// router.post('/send-approval-notification', async (req, res) => {
+//     const { requesterEmail, approverEmail, requestTitle } = req.body;
+//     const subject = 'Request Approval Notification';
+//     const text = `The request titled "${requestTitle}" has been approved by the approver.`;
+
+//     try {
+//         await sendEmail(requesterEmail, subject, text);
+//         await sendEmail(approverEmail, subject, text);
+//         res.status(200).json({ message: 'Approval notification sent' });
+//     } catch (error) {
+//         console.error('Error sending email:', error);
+//         res.status(500).json({ message: 'Failed to send approval notification' });
+//     }
+// });
+
+
+// Route to send status update notification
+router.post('/send-status-update-notification', async (req, res) => {
+    const { requesterEmail, approverEmail, requestTitle, status } = req.body;
 
     try {
-        await sendEmail(requesterEmail, subject, text);
-        await sendEmail(approverEmail, subject, text);
-        res.status(200).json({ message: 'Approval notification sent' });
+        const statusCap = status.charAt(0).toUpperCase() + status.slice(1);
+        
+        // Email details for the requester
+        const requesterSubject = `Request ${statusCap}`;
+        const requesterText = `Your request "${requestTitle}" has been ${status} by the approver.`;
+
+        // Email details for the approver
+        const approverSubject = `Request Status Updated`;
+        const approverText = `You have ${status} the request "${requestTitle}" submitted by ${requesterEmail}.`;
+
+        // Send emails to both parties
+        await sendEmail(requesterEmail, requesterSubject, requesterText);
+        await sendEmail(approverEmail, approverSubject, approverText);
+
+        res.status(200).json({ message: 'Status update notifications sent successfully' });
     } catch (error) {
-        console.error('Error sending email:', error);
-        res.status(500).json({ message: 'Failed to send approval notification' });
+        console.error('Error sending status update notifications:', error);
+        res.status(500).json({ message: 'Failed to send status update notifications' });
     }
 });
-
 module.exports = router;
