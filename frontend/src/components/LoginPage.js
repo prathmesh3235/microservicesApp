@@ -2,7 +2,7 @@ import React from 'react';
 
 const LoginPage = () => {
     const handleLogin = () => {
-        window.location.href = `${process.env.REACT_APP_AUTH_SERVICE_URL}/google`;
+        window.location.href = `${process.env.REACT_APP_AUTH_SERVICE_URL}/auth/google`;
     };
 
     return (

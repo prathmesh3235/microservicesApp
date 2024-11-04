@@ -9,13 +9,11 @@ require('dotenv').config();
 router.post('/create', async (req, res) => {
     const { title, description, type, urgency, requesterEmail, approverEmail } = req.body;
 
-    // Check if all fields are provided
     if (!title || !description || !type || !urgency || !requesterEmail || !approverEmail) {
         return res.status(400).json({ message: 'All fields are required' });
     }
     
     try {
-        // Create and save request
         const newRequest = new Request({ title, description, type, urgency, requesterEmail, approverEmail });
         await newRequest.save();
 
@@ -59,5 +57,32 @@ router.put('/approve/:id', async (req, res) => {
         res.status(500).json({ message: 'Failed to approve request' });
     }
 });
+
+// Route to fetch requests for a user
+router.get('/fetch', async (req, res) => {
+    const { email, role } = req.query;
+
+    if (!email || !role) {
+        return res.status(400).json({ message: 'Email and role are required' });
+    }
+
+    try {
+        let requests;
+        
+        if (role === 'requester') {
+            requests = await Request.find({ requesterEmail: email });
+        } else if (role === 'approver') {
+            requests = await Request.find({ approverEmail: email, status: 'Pending' });
+        } else {
+            return res.status(400).json({ message: 'Invalid role' });
+        }
+
+        res.status(200).json(requests);
+    } catch (error) {
+        console.error('Error fetching requests:', error);
+        res.status(500).json({ message: 'Failed to fetch requests' });
+    }
+});
+
 
 module.exports = router;
