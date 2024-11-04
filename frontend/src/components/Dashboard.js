@@ -296,11 +296,39 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userEmail");
-    window.location.href = "/";
-  };
+  const handleLogout = async () => {
+    try {
+        const email = localStorage.getItem('userEmail');
+        if (!email) {
+            console.error('No user email found in localStorage');
+            window.location.href = '/';
+            return;
+        }
+
+        const response = await axios({
+            method: 'POST',
+            url: `${process.env.REACT_APP_AUTH_SERVICE_URL}/auth/logout`,
+            data: { email },
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.data.message === 'Logged out successfully') {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userEmail');
+            window.location.href = '/';
+        } else {
+            throw new Error('Logout was not successful');
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+        // Still clear local storage and redirect even if there's an error
+        localStorage.removeItem('token');
+        localStorage.removeItem('userEmail');
+        window.location.href = '/';
+    }
+}; 
 
   return (
     <div className="min-h-screen bg-gray-50">

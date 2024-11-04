@@ -98,4 +98,19 @@ router.get('/health', (req, res) => {
     });
 });
 
+// route for logout notification
+router.post('/send-logout-notification', async (req, res) => {
+    const { email, message } = req.body;
+    const subject = 'Logout Notification';
+    const text = message || 'You have successfully logged out from the application.';
+
+    try {
+        await sendEmail(email, subject, text);
+        res.status(200).json({ message: 'Logout notification sent successfully' });
+    } catch (error) {
+        console.error('Error sending logout notification:', error);
+        res.status(500).json({ message: 'Failed to send logout notification' });
+    }
+});
+
 module.exports = router;

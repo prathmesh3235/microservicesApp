@@ -45,13 +45,40 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
 
 
 // Logout route
-router.get('/logout', (req, res, next) => {
-    req.logout(function(err) {
-        if (err) {
-            return next(err);
+router.all('/logout', async (req, res) => {
+    try {
+        const email = req.method === 'POST' ? req.body.email : req.query.email;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required for logout' });
         }
-        res.json({ message: 'Logged out successfully' });
-    });
+
+        try {
+            // Fixed the notification URL path
+            await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/send-logout-notification`, {
+                email,
+                message: 'You have successfully logged out from the application.'
+            });
+        } catch (notificationError) {
+            console.error('Error sending logout notification:', notificationError);
+            // Continue with logout even if notification fails
+        }
+
+        req.logout((err) => {
+            if (err) {
+                console.error('Error during logout:', err);
+                return res.status(500).json({ message: 'Error during logout process' });
+            }
+            return res.json({ message: 'Logged out successfully' });
+        });
+
+    } catch (error) {
+        console.error('Error during logout process:', error);
+        res.status(500).json({ 
+            message: 'Error during logout process',
+            error: error.message 
+        });
+    }
 });
 
 module.exports = router;
