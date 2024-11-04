@@ -9,28 +9,75 @@ require('dotenv').config();
 router.post('/create', async (req, res) => {
     const { title, description, type, urgency, requesterEmail, approverEmail } = req.body;
 
+    // Log the received data
+    console.log('Received request data:', {
+        title, description, type, urgency, requesterEmail, approverEmail
+    });
+
+    // Validate required fields
     if (!title || !description || !type || !urgency || !requesterEmail || !approverEmail) {
-        return res.status(400).json({ message: 'All fields are required' });
+        return res.status(400).json({ 
+            message: 'All fields are required',
+            missingFields: {
+                title: !title,
+                description: !description,
+                type: !type,
+                urgency: !urgency,
+                requesterEmail: !requesterEmail,
+                approverEmail: !approverEmail
+            }
+        });
     }
     
     try {
-        const newRequest = new Request({ title, description, type, urgency, requesterEmail, approverEmail });
-        await newRequest.save();
-
-        // Notify requester and approver
-        await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/send-request-notification`, {
+        // Create new request
+        const newRequest = new Request({
+            title,
+            description,
+            type,
+            urgency,
             requesterEmail,
             approverEmail,
-            requestTitle: title
+            status: 'Pending'
         });
 
-        res.status(201).json({ message: 'Request created and notifications sent', request: newRequest });
+        // Save to database
+        const savedRequest = await newRequest.save();
+        console.log('Request saved successfully:', savedRequest);
+
+        try {
+            // Correctly formatted notification URL with /notification prefix
+            const notificationUrl = `${process.env.NOTIFICATION_SERVICE_URL}/notification/send-request-notification`;
+            console.log('Attempting to send notification to:', notificationUrl);
+            
+            await axios.post(notificationUrl, {
+                requesterEmail,
+                approverEmail,
+                requestTitle: title
+            });
+            
+            console.log('Notification sent successfully');
+        } catch (notificationError) {
+            console.error('Notification error details:', {
+                message: notificationError.message,
+                response: notificationError.response?.data,
+                status: notificationError.response?.status,
+                url: notificationError.config?.url
+            });
+        }
+
+        res.status(201).json({ 
+            message: 'Request created successfully', 
+            request: savedRequest 
+        });
     } catch (error) {
-        console.error('Error creating request:', error);
-        res.status(500).json({ message: 'Failed to create request' });
+        console.error('Error in request creation:', error);
+        res.status(500).json({ 
+            message: 'Failed to create request',
+            error: error.message
+        });
     }
 });
-
 // Route to approve a request
 router.put('/approve/:id', async (req, res) => {
     const { id } = req.params;

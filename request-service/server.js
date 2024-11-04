@@ -19,6 +19,10 @@ mongoose.connect(process.env.MONGODB_URI)
         process.exit(1);
     });
 
+console.log('Environment check:', {
+    mongoUri: process.env.MONGODB_URI ? 'Set' : 'Not set',
+    notificationUrl: process.env.NOTIFICATION_SERVICE_URL ? 'Set' : 'Not set',
+});
 // Handle graceful shutdown
 process.on('SIGTERM', () => {
     console.log('SIGTERM signal received: closing HTTP server');

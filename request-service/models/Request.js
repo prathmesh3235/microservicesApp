@@ -9,6 +9,6 @@ const requestSchema = new mongoose.Schema({
     approverEmail: { type: String, required: true },
     status: { type: String, default: 'Pending' },
     createdAt: { type: Date, default: Date.now }
-});
+})
 
 module.exports = mongoose.model('Request', requestSchema);
