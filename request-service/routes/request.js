@@ -67,7 +67,6 @@ router.post('/create', async (req, res) => {
         }
 
         res.status(201).json({ 
-            message: 'Request created successfully', 
             request: savedRequest 
         });
     } catch (error) {

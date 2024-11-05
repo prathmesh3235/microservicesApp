@@ -7,6 +7,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Loader2,
+  X,
 } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 import axios from "axios";
@@ -77,6 +79,56 @@ const RequestCard = ({ request }) => {
   );
 };
 
+const CustomAlert = ({ message, type = "success", onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-in fade-in duration-300 max-w-sm">
+      <div
+        className={`rounded-lg shadow-lg p-4 ${
+          type === "success" ? "bg-green-50" : "bg-red-50"
+        }`}
+      >
+        <div className="flex items-start space-x-3">
+          {type === "success" ? (
+            <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+          ) : (
+            <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+          )}
+          <div className="flex-1">
+            <p
+              className={`text-sm font-medium ${
+                type === "success" ? "text-green-800" : "text-red-800"
+              }`}
+            >
+              {message}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className={`p-1 rounded-full hover:bg-white/25 ${
+              type === "success" ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-6 flex flex-col items-center space-y-4">
+      <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+      <p className="text-gray-700 font-medium">Creating your request...</p>
+    </div>
+  </div>
+);
+
 const RequesterDashboard = ({
   requests,
   showModal,
@@ -85,6 +137,33 @@ const RequesterDashboard = ({
   handleInputChange,
   handleCreateRequest,
 }) => {
+  const [isCreating, setIsCreating] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  // Sort requests by creation date (newest first)
+  const sortedRequests = [...requests].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      await handleCreateRequest();
+      setShowModal(false);
+      setNotification({
+        type: "success",
+        message: "Request created successfully!",
+      });
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: error.response?.data?.message || "Failed to create request",
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -104,7 +183,7 @@ const RequesterDashboard = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {requests.map((request) => (
+        {sortedRequests.map((request) => (
           <RequestCard key={request._id} request={request} />
         ))}
       </div>
@@ -121,17 +200,24 @@ const RequesterDashboard = ({
         </div>
       )}
 
+      {notification && (
+        <CustomAlert
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
+      {isCreating && <LoadingSpinner />}
+
       <Dialog open={showModal} onClose={() => setShowModal(false)}>
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-medium mb-4">Create New Request</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleCreateRequest();
-              }}
-            >
+          <Dialog.Panel className="bg-white rounded-lg p-6 w-full max-w-md">
+            <Dialog.Title className="text-lg font-medium mb-4">
+              Create New Request
+            </Dialog.Title>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
@@ -186,21 +272,21 @@ const RequesterDashboard = ({
                   </select>
                 </div>
                 <div>
-  <label className="block text-sm font-medium text-gray-700">
-    Approver's Email
-  </label>
-  <select
-    name="approverEmail"
-    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-    onChange={handleInputChange}
-    required
-  >
-    <option value="">Select Approver's Email</option>
-    <option value={process.env.REACT_APP_ADMIN_MAIL}>
-      {process.env.REACT_APP_ADMIN_MAIL}
-    </option>
-  </select>
-</div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Approver's Email
+                  </label>
+                  <select
+                    name="approverEmail"
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Approver's Email</option>
+                    <option value={process.env.REACT_APP_ADMIN_MAIL}>
+                      {process.env.REACT_APP_ADMIN_MAIL}
+                    </option>
+                  </select>
+                </div>
               </div>
               <div className="mt-6 flex justify-end space-x-3">
                 <button
@@ -218,7 +304,7 @@ const RequesterDashboard = ({
                 </button>
               </div>
             </form>
-          </div>
+          </Dialog.Panel>
         </div>
       </Dialog>
     </>
@@ -283,7 +369,7 @@ const Dashboard = () => {
         `${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/create`,
         newRequest
       );
-      alert("Request created successfully!");
+      // alert("Request created successfully!");
       setShowModal(false);
       setRequests((prev) => [...prev, response.data.request]);
     } catch (error) {
@@ -300,37 +386,37 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     try {
-        const email = localStorage.getItem('userEmail');
-        if (!email) {
-            console.error('No user email found in localStorage');
-            window.location.href = '/';
-            return;
-        }
+      const email = localStorage.getItem("userEmail");
+      if (!email) {
+        console.error("No user email found in localStorage");
+        window.location.href = "/";
+        return;
+      }
 
-        const response = await axios({
-            method: 'POST',
-            url: `${process.env.REACT_APP_AUTH_SERVICE_URL}/auth/logout`,
-            data: { email },
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+      const response = await axios({
+        method: "POST",
+        url: `${process.env.REACT_APP_AUTH_SERVICE_URL}/auth/logout`,
+        data: { email },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (response.data.message === 'Logged out successfully') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('userEmail');
-            window.location.href = '/';
-        } else {
-            throw new Error('Logout was not successful');
-        }
+      if (response.data.message === "Logged out successfully") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("userEmail");
+        window.location.href = "/";
+      } else {
+        throw new Error("Logout was not successful");
+      }
     } catch (error) {
-        console.error('Error during logout:', error);
-        // Still clear local storage and redirect even if there's an error
-        localStorage.removeItem('token');
-        localStorage.removeItem('userEmail');
-        window.location.href = '/';
+      console.error("Error during logout:", error);
+      // Still clear local storage and redirect even if there's an error
+      localStorage.removeItem("token");
+      localStorage.removeItem("userEmail");
+      window.location.href = "/";
     }
-}; 
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
