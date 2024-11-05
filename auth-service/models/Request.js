@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// Define the Request schema
+// Request schema
 const requestSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
@@ -12,5 +12,4 @@ const requestSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// Export the Request model
 module.exports = mongoose.model('Request', requestSchema);

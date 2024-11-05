@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/Users'); // Adjust the path if needed
+const User = require('../models/Users');
 
 // Route to fetch a user by email
 router.get('/:email', async (req, res) => {

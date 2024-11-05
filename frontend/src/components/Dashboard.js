@@ -139,8 +139,6 @@ const RequesterDashboard = ({
 }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [notification, setNotification] = useState(null);
-
-  // Sort requests by creation date (newest first)
   const sortedRequests = [...requests].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
@@ -411,7 +409,7 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error("Error during logout:", error);
-      // Still clear local storage and redirect even if there's an error
+      // clearing local storage and redirecting even if there's an error
       localStorage.removeItem("token");
       localStorage.removeItem("userEmail");
       window.location.href = "/";

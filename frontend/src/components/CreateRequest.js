@@ -1,17 +1,26 @@
-// components/CreateRequestDialog.js
-import React from 'react';
+import React from "react";
 import { Dialog } from "@headlessui/react";
 import { XCircle } from "lucide-react";
 
-const CreateRequestDialog = ({ isOpen, onClose, onSubmit, handleInputChange }) => {
+const CreateRequestDialog = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  handleInputChange,
+}) => {
   return (
     <Dialog open={isOpen} onClose={onClose}>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        aria-hidden="true"
+      />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="bg-white rounded-xl shadow-xl w-full max-w-md transform transition-all">
           <div className="px-6 py-5 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Create New Request</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Create New Request
+              </h2>
               <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-500 focus:outline-none"
@@ -22,10 +31,12 @@ const CreateRequestDialog = ({ isOpen, onClose, onSubmit, handleInputChange }) =
           </div>
 
           <div className="p-6">
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              onSubmit();
-            }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSubmit();
+              }}
+            >
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
