@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
-  Bell,
   LogOut,
   Plus,
-  Calendar,
   Box,
   Clock3,
   CheckCircle,
@@ -188,17 +186,21 @@ const RequesterDashboard = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Approver's Email
-                  </label>
-                  <input
-                    type="email"
-                    name="approverEmail"
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
+  <label className="block text-sm font-medium text-gray-700">
+    Approver's Email
+  </label>
+  <select
+    name="approverEmail"
+    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+    onChange={handleInputChange}
+    required
+  >
+    <option value="">Select Approver's Email</option>
+    <option value={process.env.REACT_APP_ADMIN_MAIL}>
+      {process.env.REACT_APP_ADMIN_MAIL}
+    </option>
+  </select>
+</div>
               </div>
               <div className="mt-6 flex justify-end space-x-3">
                 <button
@@ -341,10 +343,6 @@ const Dashboard = () => {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="p-2 rounded-full hover:bg-gray-100 relative">
-                <Bell className="w-6 h-6 text-gray-600" />
-                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 transform translate-x-1/2 -translate-y-1/2"></span>
-              </button>
               <button
                 onClick={handleLogout}
                 className="flex items-center space-x-2 px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100"
