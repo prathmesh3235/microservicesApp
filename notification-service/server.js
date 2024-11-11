@@ -1,10 +1,25 @@
 const app = require("./app");
 require("dotenv").config();
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
 
 const PORT = process.env.PORT || 5002;
 
+const privateKey = fs.readFileSync(
+  path.join(__dirname, "../localhost-key.pem"),
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  path.join(__dirname, "../localhost.pem"),
+  "utf8"
+);
+const credentials = { key: privateKey, cert: certificate };
+
+const httpsServer = https.createServer(credentials, app);
+
 const startServer = () => {
-  const server = app
+  const server = httpsServer
     .listen(PORT, () => {
       console.log(`Notification service running on port ${PORT}`);
     })

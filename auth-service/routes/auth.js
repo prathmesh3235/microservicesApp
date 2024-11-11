@@ -7,10 +7,13 @@ const User = require("../models/Users");
 // Helper function for sending notifications
 async function sendNotification(type, email, message) {
   try {
-    await axios.post(`${process.env.NOTIFICATION_SERVICE_URL}/send-${type}-notification`, {
-      email,
-      message
-    });
+    await axios.post(
+      `${process.env.NOTIFICATION_SERVICE_URL}/send-${type}-notification`,
+      {
+        email,
+        message,
+      }
+    );
   } catch (error) {
     console.error(`Error sending ${type} notification:`, error);
     // Don't throw error - notification failure shouldn't block auth flow
@@ -18,12 +21,14 @@ async function sendNotification(type, email, message) {
 }
 
 // Initiating Google login
-router.get("/google",
+router.get(
+  "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
 // Handling Google callback
-router.get("/google/callback",
+router.get(
+  "/google/callback",
   passport.authenticate("google", { session: false }),
   async (req, res) => {
     const { token, email } = req.user;
@@ -31,7 +36,7 @@ router.get("/google/callback",
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: "Email not provided by authentication"
+        message: "Email not provided by authentication",
       });
     }
 
@@ -54,20 +59,23 @@ router.get("/google/callback",
       }
 
       // Send login notification asynchronously
-      await sendNotification('login', email, 'You have successfully logged in.');
+      await sendNotification(
+        "login",
+        email,
+        "You have successfully logged in."
+      );
 
       // Redirect with encoded parameters
-      const redirectUrl = new URL('/dashboard', process.env.FRONTEND_URL);
-      redirectUrl.searchParams.append('email', encodeURIComponent(email));
-      redirectUrl.searchParams.append('token', encodeURIComponent(token));
-      
-      res.redirect(redirectUrl.toString());
+      const redirectUrl = new URL("/dashboard", process.env.FRONTEND_URL);
+      redirectUrl.searchParams.append("email", encodeURIComponent(email));
+      redirectUrl.searchParams.append("token", encodeURIComponent(token));
 
+      res.redirect(redirectUrl.toString());
     } catch (error) {
       console.error("Error in authentication callback:", error);
       res.status(500).json({
         success: false,
-        message: "Internal server error during authentication"
+        message: "Internal server error during authentication",
       });
     }
   }
@@ -81,12 +89,16 @@ router.all("/logout", async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: "Email is required for logout"
+        message: "Email is required for logout",
       });
     }
 
     // Send logout notification asynchronously
-    await sendNotification('logout', email, 'You have successfully logged out from the application.');
+    await sendNotification(
+      "logout",
+      email,
+      "You have successfully logged out from the application."
+    );
 
     // Handle passport logout
     req.logout((err) => {
@@ -95,22 +107,21 @@ router.all("/logout", async (req, res) => {
         return res.status(500).json({
           success: false,
           message: "Error during logout process",
-          error: err.message
+          error: err.message,
         });
       }
 
       return res.json({
         success: true,
-        message: "Logged out successfully"
+        message: "Logged out successfully",
       });
     });
-
   } catch (error) {
     console.error("Error during logout process:", error);
     res.status(500).json({
       success: false,
       message: "Error during logout process",
-      error: error.message
+      error: error.message,
     });
   }
 });

@@ -1,8 +1,23 @@
 const app = require("./app");
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 5003;
+
+const privateKey = fs.readFileSync(
+  path.join(__dirname, "../localhost-key.pem"),
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  path.join(__dirname, "../localhost.pem"),
+  "utf8"
+);
+const credentials = { key: privateKey, cert: certificate };
+
+const httpsServer = https.createServer(credentials, app);
 
 // Connect to MongoDB
 mongoose
@@ -11,7 +26,7 @@ mongoose
     console.log("Connected to MongoDB");
 
     // Start server only after successful DB connection
-    app.listen(PORT, () => {
+    httpsServer.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   })

@@ -130,7 +130,8 @@ router.put("/approve/:id", async (req, res) => {
 
 // Route to fetch requests for a user
 router.get("/fetch", async (req, res) => {
-  const { email, role, includeAll } = req.query;
+  const email = decodeURIComponent(req.query.email);
+  const { role, includeAll } = req.query;
 
   if (!email || !role) {
     return res.status(400).json({ message: "Email and role are required" });
