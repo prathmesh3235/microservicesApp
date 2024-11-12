@@ -25,7 +25,7 @@ const fetchRequestLimiter = rateLimit({
 
 const approveRequestLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 30, // Limit each IP to 30 approve requests per window
+  max: 60, // Limit each IP to 30 approve requests per window
   message: "Too many approve requests from this IP, please try again later.",
 });
 
@@ -102,26 +102,32 @@ router.get("/fetch", fetchRequestLimiter, async (req, res) => {
 
   // Generate a cache key based on query parameters
   const cacheKey = `requests_${email}_${role}_${includeAll}`;
-  const cachedRequests = cache.get(cacheKey);
+  // const cachedRequests = cache.get(cacheKey);
 
-  // Serve cached data if available
-  if (cachedRequests) {
-    console.log("Serving cached data");
-    return res.status(200).json(cachedRequests);
-  }
+  // Serve cached data if available (disabled temporarily)
+  // if (cachedRequests) {
+  //   console.log("Serving cached data", cachedRequests.length);
+  //   return res.status(200).json(cachedRequests);
+  // }
 
   try {
     let requests;
     if (role === "requester") {
       requests = await Request.find({ requesterEmail: email });
     } else if (role === "approver") {
-      requests = await Request.find({ approverEmail: email, ...(includeAll === "true" ? {} : { status: "Pending" }) });
+      requests = await Request.find({
+        approverEmail: email,
+        ...(includeAll === "true" ? {} : { status: "Pending" })
+      });
     } else {
       return res.status(400).json({ message: "Invalid role" });
     }
 
-    // Cache the results
-    cache.set(cacheKey, requests);
+    // Log the number of requests retrieved from the database
+    console.log("Fetched requests from DB:", requests.length);
+
+    // Cache the results (disabled temporarily)
+    // cache.set(cacheKey, requests);
     res.status(200).json(requests);
   } catch (error) {
     console.error("Error fetching requests:", error);

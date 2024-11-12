@@ -295,6 +295,23 @@ const Dashboard = () => {
     approverEmail: "",
   });
 
+  // Function to fetch requests
+  const fetchRequests = async () => {
+    const email = localStorage.getItem("userEmail");
+    const role = isManager ? "approver" : "requester";
+    
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/fetch`,
+        { params: { email, role } }
+      );
+      setRequests(response.data);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+    }
+  };
+
+  // Initialize dashboard and fetch requests on mount
   useEffect(() => {
     const initializeDashboard = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -317,12 +334,7 @@ const Dashboard = () => {
         const user = userResponse.data;
         setIsManager(user.isManager);
 
-        const role = user.isManager ? "approver" : "requester";
-        const requestsResponse = await axios.get(
-          `${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/fetch`,
-          { params: { email, role } }
-        );
-        setRequests(requestsResponse.data);
+        await fetchRequests(); // Fetch requests after user data is initialized
       } catch (error) {
         console.error("Error initializing dashboard:", error);
       }
@@ -331,19 +343,31 @@ const Dashboard = () => {
     initializeDashboard();
   }, []);
 
+  // Handle input change for new request form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewRequest(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle create request action
   const handleCreateRequest = async () => {
-    const response = await axios.post(
-      `${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/create`,
-      newRequest
-    );
-    setRequests(prev => [...prev, response.data.request]);
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_REQUEST_SERVICE_URL}/request/create`,
+        newRequest
+      );
+  
+      // Option 1: Add created request directly to requests state
+      setRequests(prevRequests => [...prevRequests, response.data]);
+
+      // Option 2: Refetch requests for consistency
+      await fetchRequests();
+    } catch (error) {
+      console.error("Error creating request:", error);
+    }
   };
 
+  // Handle logout
   const handleLogout = async () => {
     const email = localStorage.getItem("userEmail");
     if (!email) {
@@ -386,7 +410,7 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
-          </div>
+        </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
