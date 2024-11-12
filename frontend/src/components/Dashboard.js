@@ -298,10 +298,13 @@ const Dashboard = () => {
   useEffect(() => {
     const initializeDashboard = async () => {
       const params = new URLSearchParams(window.location.search);
-      const token = params.get("token");
-      const email = params.get("email");
+      let token = params.get("token");
+      let email = params.get("email");
 
       if (!email) return;
+
+      token = token ? decodeURIComponent(token) : null;
+      email = decodeURIComponent(email);
 
       if (token) localStorage.setItem("token", token);
       localStorage.setItem("userEmail", email);

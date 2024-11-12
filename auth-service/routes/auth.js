@@ -3,6 +3,11 @@ const passport = require("passport");
 const router = express.Router();
 const axios = require("axios");
 const User = require("../models/Users");
+const https = require("https");
+
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+});
 
 // Helper function for sending notifications
 async function sendNotification(type, email, message) {
@@ -12,7 +17,8 @@ async function sendNotification(type, email, message) {
       {
         email,
         message,
-      }
+      },
+      { httpsAgent } // Pass the custom HTTPS agent to Axios
     );
   } catch (error) {
     console.error(`Error sending ${type} notification:`, error);
@@ -100,21 +106,10 @@ router.all("/logout", async (req, res) => {
       "You have successfully logged out from the application."
     );
 
-    // Handle passport logout
-    req.logout((err) => {
-      if (err) {
-        console.error("Error during logout:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Error during logout process",
-          error: err.message,
-        });
-      }
-
-      return res.json({
-        success: true,
-        message: "Logged out successfully",
-      });
+    // No need for req.logout() since we're not using sessions
+    return res.json({
+      success: true,
+      message: "Logged out successfully",
     });
   } catch (error) {
     console.error("Error during logout process:", error);
@@ -125,5 +120,6 @@ router.all("/logout", async (req, res) => {
     });
   }
 });
+
 
 module.exports = router;
